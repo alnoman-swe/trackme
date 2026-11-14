@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  Dev
+  QA
+  Manager
+  Leader
+}
+
+model Person {
+  id       Int     @id @default(autoincrement())
+  name     String
+  role     Role
+  email    String  @default("")
+  is_admin Boolean @default(false)
+  active   Boolean @default(true)
+
+  entries  Entry[]
+  comments Comment[] @relation("about")
+  authored Comment[] @relation("author")
+
+  @@map("people")
+}
+
+// What one person got done on one day
+model Entry {
+  person_id  Int
+  day        DateTime @db.Date
+  body       String
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  person Person @relation(fields: [person_id], references: [id])
+
+  @@id([person_id, day])
+  @@map("entries")
+}
+
+// A comment on a person's day (it can exist before they write their entry)
+model Comment {
+  id         Int      @id @default(autoincrement())
+  person_id  Int
+  day        DateTime @db.Date
+  author_id  Int
+  body       String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  person Person @relation("about", fields: [person_id], references: [id])
+  author Person @relation("author", fields: [author_id], references: [id])
+
+  @@index([day])
+  @@map("comments")
+}
+
+// One row per email batch per day, so nothing is sent twice
+model SentEmail {
+  day  DateTime @db.Date
+  kind String
+
+  @@id([day, kind])
+  @@map("sent_emails")
+}
