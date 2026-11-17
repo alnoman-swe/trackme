@@ -33,27 +33,26 @@ export const Tile = ({ icon, tint }) => (
   <span className="tile" style={tint && { '--tint': tint }}><Icon name={icon} /></span>
 )
 
-// Rich two-tone gradients; one per person, picked by id so it never changes.
-const GRADIENTS = [
-  ['#6366f1', '#a855f7'], ['#0ea5e9', '#2563eb'], ['#f43f5e', '#e11d48'], ['#f59e0b', '#ea580c'],
-  ['#10b981', '#0d9488'], ['#ec4899', '#8b5cf6'], ['#14b8a6', '#0284c7'], ['#8b5cf6', '#4f46e5'],
-  ['#f97316', '#db2777'], ['#22c55e', '#15803d'], ['#06b6d4', '#6366f1'], ['#64748b', '#334155'],
-]
+// Avataaars by Pablo Stanley (free for commercial use), via DiceBear. Tuned for a friendly, office-ready look:
+// smiling faces, real skin tones, no slogan shirts or novelty hats, muted circle backgrounds.
+// Seeded by id (not name) so the face is stable and no personal data leaves the app.
+const AVATAR_STYLE = new URLSearchParams({
+  backgroundColor: 'b6a8c8,c9a98a,e8645a,4f5b8f,5b8a5e,d4a53a,a7c7e7,7a9aa8,8a6a6a,d9a441',
+  skinColor: '614335,ae5d29,d08b5b,edb98a,ffdbb4',
+  mouth: 'smile,twinkle,default',
+  eyes: 'happy,default,wink,squint',
+  eyebrows: 'default,defaultNatural,raisedExcited,raisedExcitedNatural',
+  accessories: 'prescription01,prescription02,round,kurt', accessoriesProbability: '35',
+  facialHair: 'beardLight,beardMedium', facialHairProbability: '20',
+  clothing: 'blazerAndShirt,blazerAndSweater,collarAndSweater,hoodie,shirtCrewNeck,shirtScoopNeck,shirtVNeck',
+  top: 'bigHair,bob,bun,curly,curvy,dreads,frizzle,fro,froBand,longButNotTooLong,miaWallace,shaggy,shavedSides,shortCurly,shortFlat,shortRound,shortWaved,sides,straight01,straight02,straightAndStrand,theCaesar,theCaesarAndSidePart,dreads01,dreads02,hijab,turban',
+}).toString()
 
-// "Md Abdullah Al Noman" -> "MN"
-export const initials = (name) => {
-  const w = name.trim().split(/\s+/)
-  return ((w[0]?.[0] ?? '') + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase()
-}
-
-export const Avatar = ({ person }) => {
-  const [a, b] = GRADIENTS[person.id % GRADIENTS.length]
-  return (
-    <span className="avatar" data-role={person.role} style={{ '--g': `linear-gradient(135deg, ${a}, ${b})` }} aria-hidden="true">
-      {initials(person.name)}
-    </span>
-  )
-}
+export const Avatar = ({ person }) => (
+  <span className="avatar" data-role={person.role} aria-hidden="true">
+    <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=trackme-${person.id}&${AVATAR_STYLE}`} alt="" loading="lazy" />
+  </span>
+)
 
 export function PersonFields({ person }) {
   return (
