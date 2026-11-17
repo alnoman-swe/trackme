@@ -33,14 +33,27 @@ export const Tile = ({ icon, tint }) => (
   <span className="tile" style={tint && { '--tint': tint }}><Icon name={icon} /></span>
 )
 
-// Microsoft Fluent 3D emoji (MIT). Picked by id (not name) so it's stable and no personal data leaves the app.
-const FACES = '1f60e 1f929 1f973 1f913 1f920 1f607 1f604 1f61c 1f917 1f60a 1f98a 1f43c 1f981 1f42f 1f428 1f438 1f435 1f984 1f427 1f989 1f419 1f430 1f436 1f431'.split(' ')
+// Rich two-tone gradients; one per person, picked by id so it never changes.
+const GRADIENTS = [
+  ['#6366f1', '#a855f7'], ['#0ea5e9', '#2563eb'], ['#f43f5e', '#e11d48'], ['#f59e0b', '#ea580c'],
+  ['#10b981', '#0d9488'], ['#ec4899', '#8b5cf6'], ['#14b8a6', '#0284c7'], ['#8b5cf6', '#4f46e5'],
+  ['#f97316', '#db2777'], ['#22c55e', '#15803d'], ['#06b6d4', '#6366f1'], ['#64748b', '#334155'],
+]
 
-export const Avatar = ({ person }) => (
-  <span className="avatar" data-role={person.role} aria-hidden="true">
-    <img src={`https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@1.1.0/assets/${FACES[person.id % FACES.length]}.webp`} alt="" loading="lazy" />
-  </span>
-)
+// "Md Abdullah Al Noman" -> "MN"
+export const initials = (name) => {
+  const w = name.trim().split(/\s+/)
+  return ((w[0]?.[0] ?? '') + (w.length > 1 ? w.at(-1)[0] : '')).toUpperCase()
+}
+
+export const Avatar = ({ person }) => {
+  const [a, b] = GRADIENTS[person.id % GRADIENTS.length]
+  return (
+    <span className="avatar" data-role={person.role} style={{ '--g': `linear-gradient(135deg, ${a}, ${b})` }} aria-hidden="true">
+      {initials(person.name)}
+    </span>
+  )
+}
 
 export function PersonFields({ person }) {
   return (
