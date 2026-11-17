@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { connection } from 'next/server'
 import { prisma, toDate, toDay } from '../../lib/db.js'
 import { addDays, config, fmtDay, isOff, nowParts } from '../../lib/logic.js'
 import Shell, { Avatar } from '../shell.js'
 
 export default async function Grid() {
+  await connection() // render per request: needs today's date + live DB, not build-time data
   const cfg = config()
   const today = nowParts(cfg.tz).day
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13))

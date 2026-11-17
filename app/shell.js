@@ -35,7 +35,8 @@ export const Tile = ({ icon, tint }) => (
 
 export const Avatar = ({ person }) => (
   <span className="avatar" data-role={person.role} aria-hidden="true">
-    {person.name[0].toUpperCase()}
+    {/* seeded by id (not name) so the face is stable and no personal data leaves the app */}
+    <img src={`https://api.dicebear.com/9.x/adventurer/svg?seed=trackme-${person.id}`} alt="" loading="lazy" />
   </span>
 )
 

@@ -27,7 +27,7 @@ export default async function Doc({ searchParams }) {
         <div>
           <h1>{fmtDay(day)}</h1>
           <p className="count">
-            {entries.length} of {people.length} have written. Updates every few seconds.
+            {people.filter((p) => entryOf[p.id]).length} of {people.length} have written. Updates every few seconds.
             {day !== today && <> <Link href="/doc">Back to today</Link></>}
           </p>
         </div>

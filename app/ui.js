@@ -16,7 +16,7 @@ export function EntryEditor({ day, initial }) {
     timer.current = null
     try {
       await saveEntry(day, latest.current)
-      setStatus(latest.current.trim() ? 'Saved' : '')
+      if (!timer.current) setStatus(latest.current.trim() ? 'Saved' : '') // still 'Saving…' if typed meanwhile
     } catch {
       setStatus('Not saved. Check your connection and keep typing to retry.')
     }
