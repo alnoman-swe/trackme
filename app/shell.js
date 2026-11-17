@@ -33,10 +33,12 @@ export const Tile = ({ icon, tint }) => (
   <span className="tile" style={tint && { '--tint': tint }}><Icon name={icon} /></span>
 )
 
+// Microsoft Fluent 3D emoji (MIT). Picked by id (not name) so it's stable and no personal data leaves the app.
+const FACES = '1f60e 1f929 1f973 1f913 1f920 1f607 1f604 1f61c 1f917 1f60a 1f98a 1f43c 1f981 1f42f 1f428 1f438 1f435 1f984 1f427 1f989 1f419 1f430 1f436 1f431'.split(' ')
+
 export const Avatar = ({ person }) => (
   <span className="avatar" data-role={person.role} aria-hidden="true">
-    {/* seeded by id (not name) so the face is stable and no personal data leaves the app */}
-    <img src={`https://api.dicebear.com/9.x/adventurer/svg?seed=trackme-${person.id}`} alt="" loading="lazy" />
+    <img src={`https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@1.1.0/assets/${FACES[person.id % FACES.length]}.webp`} alt="" loading="lazy" />
   </span>
 )
 

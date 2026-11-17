@@ -34,7 +34,7 @@ that email, a new person is added (role Dev, edit it on People).
 ## Emails
 
 On working days, people with no entry get a reminder at `REMIND_AT`, and admins get
-the who-wrote list at `SUMMARY_AT`. Set emails and admins on the People screen.
+the who-wrote list at `SUMMARY_AT`. Set emails on the People screen; admins are the emails listed in `ADMIN_EMAILS`.
 Emails go through Resend: put your API key in `RESEND_API_KEY` and a sender on your
 verified domain in `MAIL_FROM`. With no key, emails are off.
 The app must run as one always-on server for the schedule to fire.
