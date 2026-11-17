@@ -33,24 +33,14 @@ export const Tile = ({ icon, tint }) => (
   <span className="tile" style={tint && { '--tint': tint }}><Icon name={icon} /></span>
 )
 
-// Avataaars by Pablo Stanley (free for commercial use), via DiceBear. Tuned for a friendly, office-ready look:
-// smiling faces, real skin tones, no slogan shirts or novelty hats, muted circle backgrounds.
-// Seeded by id (not name) so the face is stable and no personal data leaves the app.
-const AVATAR_STYLE = new URLSearchParams({
-  backgroundColor: 'b6a8c8,c9a98a,e8645a,4f5b8f,5b8a5e,d4a53a,a7c7e7,7a9aa8,8a6a6a,d9a441',
-  skinColor: '614335,ae5d29,d08b5b,edb98a,ffdbb4',
-  mouth: 'smile,twinkle,default',
-  eyes: 'happy,default,wink,squint',
-  eyebrows: 'default,defaultNatural,raisedExcited,raisedExcitedNatural',
-  accessories: 'prescription01,prescription02,round,kurt', accessoriesProbability: '35',
-  facialHair: 'beardLight,beardMedium', facialHairProbability: '20',
-  clothing: 'blazerAndShirt,blazerAndSweater,collarAndSweater,hoodie,shirtCrewNeck,shirtScoopNeck,shirtVNeck',
-  top: 'bigHair,bob,bun,curly,curvy,dreads,frizzle,fro,froBand,longButNotTooLong,miaWallace,shaggy,shavedSides,shortCurly,shortFlat,shortRound,shortWaved,sides,straight01,straight02,straightAndStrand,theCaesar,theCaesarAndSidePart,dreads01,dreads02,hijab,turban',
-}).toString()
+// 3D people from Microsoft Fluent Emoji (MIT), stored in public/avatars/0..31.png.
+// Picked by id so each person keeps the same face; a bright circle behind each one.
+const AVATAR_COUNT = 32
+const AVATAR_BG = ['#ffd166', '#8ecae6', '#ff9f9f', '#b8e986', '#cdb4ff', '#ffb3d9', '#7ee0c3', '#ffc285']
 
 export const Avatar = ({ person }) => (
-  <span className="avatar" data-role={person.role} aria-hidden="true">
-    <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=trackme-${person.id}&${AVATAR_STYLE}`} alt="" loading="lazy" />
+  <span className="avatar" data-role={person.role} style={{ background: AVATAR_BG[person.id % AVATAR_BG.length] }} aria-hidden="true">
+    <img src={`/avatars/${person.id % AVATAR_COUNT}.png`} alt="" loading="lazy" />
   </span>
 )
 
