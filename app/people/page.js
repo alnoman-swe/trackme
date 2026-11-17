@@ -1,12 +1,15 @@
 import { prisma } from '../../lib/db.js'
 import { config } from '../../lib/logic.js'
 import { canEditPeople, getMe } from '../../lib/me.js'
-import { savePerson } from '../actions.js'
+import { deletePerson, savePerson } from '../actions.js'
+import { isAdmin } from '../../lib/logic.js'
+import { ConfirmButton } from '../ui.js'
 import Shell, { Icon, PersonFields, Tile } from '../shell.js'
 
 export default async function People() {
   const cfg = config()
-  const canEdit = await canEditPeople(await getMe())
+  const me = await getMe()
+  const canEdit = canEditPeople(me)
   const people = await prisma.person.findMany({ orderBy: [{ active: 'desc' }, { name: 'asc' }] })
   return (
     <Shell active="people">
@@ -24,9 +27,14 @@ export default async function People() {
           <form key={p.id} action={savePerson} data-role={p.role} className={`row ${p.active ? '' : 'inactive'}`}>
             <input type="hidden" name="id" value={p.id} />
             <PersonFields person={p} />
-            <label><input type="checkbox" name="is_admin" defaultChecked={p.is_admin} /> Admin</label>
+            {isAdmin(p) && <span title="Set by ADMIN_EMAILS in .env">Admin</span>}
             <label title="Untick when someone leaves. Their history is kept."><input type="checkbox" name="active" defaultChecked={p.active} /> On the team</label>
             <button><Icon name="check" />Save</button>
+            {p.id !== me?.id && (
+              <ConfirmButton formAction={deletePerson} message={`Delete ${p.name} and all their entries and comments? This can't be undone.`}>
+                Delete
+              </ConfirmButton>
+            )}
           </form>
         ))}
         <h2 className="group"><Tile icon="plus" tint="var(--sun)" />Add someone</h2>

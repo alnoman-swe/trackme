@@ -66,3 +66,8 @@ export function Refresher() {
   }, [router])
   return null
 }
+
+// Submit button that asks first. For destructive actions.
+export function ConfirmButton({ message, ...props }) {
+  return <button {...props} onClick={(e) => { if (!confirm(message)) e.preventDefault() }} />
+}

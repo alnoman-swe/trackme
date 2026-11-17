@@ -34,17 +34,30 @@ export async function addComment(personId, day, formData) {
 }
 
 export async function savePerson(formData) {
-  if (!(await canEditPeople(await getMe()))) throw new Error('Only admins can edit people')
+  if (!canEditPeople(await getMe())) throw new Error('Only admins can edit people')
   const id = Number(formData.get('id')) || null
   const name = String(formData.get('name') ?? '').trim().slice(0, 80)
   const role = String(formData.get('role'))
   const email = String(formData.get('email') ?? '').trim().slice(0, 200)
   if (!name || !ROLES.includes(role) || (email && !/^\S+@\S+\.\S+$/.test(email))) throw new Error('Check the name, role and email')
   if (id) {
-    const flags = { is_admin: formData.get('is_admin') === 'on', active: formData.get('active') === 'on' }
-    await prisma.person.update({ where: { id }, data: { name, role, email, ...flags } })
+    await prisma.person.update({ where: { id }, data: { name, role, email, active: formData.get('active') === 'on' } })
   } else {
     await prisma.person.create({ data: { name, role, email } })
   }
+  done()
+}
+
+// Deletes the person and everything they wrote or got commented on. Untick "On the team" to keep history instead.
+export async function deletePerson(formData) {
+  const me = await getMe()
+  if (!canEditPeople(me)) throw new Error('Only admins can delete people')
+  const id = Number(formData.get('id'))
+  if (!id || id === me.id) throw new Error("You can't delete yourself")
+  await prisma.$transaction([
+    prisma.comment.deleteMany({ where: { OR: [{ person_id: id }, { author_id: id }] } }),
+    prisma.entry.deleteMany({ where: { person_id: id } }),
+    prisma.person.delete({ where: { id } }),
+  ])
   done()
 }
