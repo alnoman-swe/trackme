@@ -30,7 +30,7 @@ export default async function People() {
             {isAdmin(p) && <span title="Set by ADMIN_EMAILS in .env">Admin</span>}
             <label title="Untick when someone leaves. Their history is kept."><input type="checkbox" name="active" defaultChecked={p.active} /> On the team</label>
             <button><Icon name="check" />Save</button>
-            {p.id !== me?.id && (
+            {canEdit && p.id !== me.id && (
               <ConfirmButton formAction={deletePerson} message={`Delete ${p.name} and all their entries and comments? This can't be undone.`}>
                 Delete
               </ConfirmButton>
