@@ -12,6 +12,7 @@ enum Role {
   QA
   Manager
   Leader
+  Admin
 }
 
 model Person {
