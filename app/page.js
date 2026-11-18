@@ -2,11 +2,10 @@ import Link from 'next/link'
 import { prisma, toDate } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isDay, nowParts } from '../lib/logic.js'
-import { addComment } from './actions.js'
-import Shell, { Avatar, Icon, Tile } from './shell.js'
+import Shell, { Avatar, Icon, Thread, Tile } from './shell.js'
 import { EntryEditor } from './ui.js'
 
-const HEADINGS = { Dev: 'Developers', QA: 'QA', Manager: 'Managers', Leader: 'Leaders' }
+const HEADINGS = { Dev: 'Developers', QA: 'QA', Manager: 'Managers', Leader: 'Leaders', Admin: 'Admins' }
 
 export default async function Board({ searchParams }) {
   const { d, error } = await searchParams
@@ -80,16 +79,7 @@ export default async function Board({ searchParams }) {
                     ) : (
                       <p className="missing"><Icon name="clock" />Not written yet</p>
                     )}
-                    <div className="thread">
-                      {comments.filter((c) => c.person_id === p.id).map((c) => (
-                        <p key={c.id}><b>{c.author.name}</b> {c.body} <time>{savedAt(c.created_at)}</time></p>
-                      ))}
-                      <form action={addComment.bind(null, p.id, day)}>
-                        <Icon name="chat" />
-                        <input name="body" placeholder={isMe ? 'Reply' : `Comment on ${p.name}'s day`} aria-label={`Comment on ${p.name}'s day`} required maxLength={2000} autoComplete="off" />
-                        <button aria-label="Send comment"><Icon name="send" /></button>
-                      </form>
-                    </div>
+                    <Thread person={p} day={day} isMe={isMe} comments={comments} when={savedAt} />
                   </div>
                 </article>
               )

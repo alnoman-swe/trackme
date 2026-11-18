@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate, toDay } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isWorkDay, nowParts } from '../lib/logic.js'
-import { signOut } from './actions.js'
+import { addComment, signOut } from './actions.js'
 import { Refresher } from './ui.js'
 
 const ICONS = {
@@ -22,6 +22,7 @@ const ICONS = {
   QA: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM9 12l2 2 4-4',
   Manager: 'M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16M4 6h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',
   Leader: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7',
+  Admin: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',
 }
 
 export const Icon = ({ name }) => (
@@ -48,7 +49,8 @@ export function PersonFields({ person }) {
   return (
     <>
       <input name="name" defaultValue={person?.name} placeholder="Name" aria-label="Name" required maxLength={80} />
-      <select name="role" defaultValue={person?.role ?? 'Dev'} aria-label="Role">
+      {/* key remounts on save: React won't update a select's default, so the post-action form reset would restore the old role */}
+      <select key={person?.role} name="role" defaultValue={person?.role ?? 'Dev'} aria-label="Role">
         {ROLES.map((r) => <option key={r}>{r}</option>)}
       </select>
       <input name="email" type="email" defaultValue={person?.email} placeholder="Email for reminders" aria-label="Email" maxLength={200} />
@@ -105,5 +107,23 @@ export default async function Shell({ active, day, error, children }) {
       </nav>
       <main>{children}</main>
     </div>
+  )
+}
+
+// Comments on one person's day, plus the box to add one. Used by the board and the doc.
+export function Thread({ person, day, isMe, comments, when }) {
+  const mine = comments.filter((c) => c.person_id === person.id)
+  // Collapsed behind a chat icon + count; <details> keeps itself open across the 5s refresh.
+  return (
+    <details className="thread">
+      <summary aria-label={`${mine.length} comment${mine.length === 1 ? "" : "s"} on ${person.name}'s day`}><Icon name="chat" />{mine.length || ''}</summary>
+      {mine.map((c) => (
+        <p key={c.id}><b>{c.author.name}</b> {c.body} <time>{when(c.created_at)}</time></p>
+      ))}
+      <form action={addComment.bind(null, person.id, day)}>
+        <input name="body" placeholder={isMe ? 'Reply' : `Comment on ${person.name}'s day`} aria-label={`Comment on ${person.name}'s day`} required maxLength={2000} autoComplete="off" />
+        <button aria-label="Send comment"><Icon name="send" /></button>
+      </form>
+    </details>
   )
 }

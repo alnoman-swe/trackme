@@ -10,7 +10,7 @@ export default async function Grid() {
   const today = nowParts(cfg.tz).day
   const days = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13))
   const [people, rows] = await Promise.all([
-    // role sorts in the order the Role enum is declared: Dev, QA, Manager, Leader
+    // role sorts in the order the Role enum is declared: Dev, QA, Manager, Leader, Admin
     prisma.person.findMany({ where: { active: true }, orderBy: [{ role: 'asc' }, { name: 'asc' }] }),
     prisma.entry.findMany({ where: { day: { gte: toDate(days[0]) } }, select: { person_id: true, day: true } }),
   ])

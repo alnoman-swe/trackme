@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate } from '../../lib/db.js'
 import { getMe } from '../../lib/me.js'
 import { addDays, config, fmtDay, isDay, nowParts } from '../../lib/logic.js'
-import Shell, { Avatar, Icon } from '../shell.js'
+import Shell, { Avatar, Icon, Thread } from '../shell.js'
 import { EntryEditor } from '../ui.js'
 
 // Google-Docs-style: one column per person, side by side. Live via the Shell's Refresher.
@@ -13,9 +13,10 @@ export default async function Doc({ searchParams }) {
   const day = isDay(d) ? d : today
   const me = await getMe()
 
-  const [people, entries] = await Promise.all([
+  const [people, entries, comments] = await Promise.all([
     prisma.person.findMany({ where: { active: true }, orderBy: [{ role: 'asc' }, { name: 'asc' }] }),
     prisma.entry.findMany({ where: { day: toDate(day) } }),
+    prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true }, orderBy: { id: 'asc' } }),
   ])
   people.sort((a, b) => (b.id === me?.id) - (a.id === me?.id)) // your column first
   const entryOf = Object.fromEntries(entries.map((e) => [e.person_id, e]))
@@ -45,7 +46,7 @@ export default async function Doc({ searchParams }) {
             <section key={p.id} className="col" data-role={p.role}>
               <div className="who">
                 <Avatar person={p} />
-                <Link href={`/?d=${day}#p-${p.id}`} title="Open on the board to comment"><b>{p.name}</b></Link>
+                <b>{p.name}</b>
                 {isMe && <span className="you">you</span>}
                 {entry && <time><Icon name="clock" />{time(entry.updated_at)}</time>}
               </div>
@@ -56,6 +57,7 @@ export default async function Doc({ searchParams }) {
               ) : (
                 <p className="missing"><Icon name="clock" />Not written yet</p>
               )}
+              <Thread person={p} day={day} isMe={isMe} comments={comments} when={time} />
             </section>
           )
         })}
