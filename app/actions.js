@@ -3,7 +3,8 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { prisma, toDate } from '../lib/db.js'
 import { canEditPeople, getMe } from '../lib/me.js'
-import { ROLES, isDay } from '../lib/logic.js'
+import { ROLES, fmtDay, isAdmin, isDay } from '../lib/logic.js'
+import { send } from '../lib/cron.js'
 
 const done = () => revalidatePath('/', 'layout')
 
@@ -29,8 +30,25 @@ export async function addComment(personId, day, formData) {
   const body = String(formData.get('body') ?? '').trim().slice(0, 2000)
   if (!me) throw new Error('Sign in first')
   if (!isDay(day) || !body) return
-  await prisma.comment.create({ data: { person_id: Number(personId), day: toDate(day), author_id: me.id, body } })
+  const c = await prisma.comment.create({ data: { person_id: Number(personId), day: toDate(day), author_id: me.id, body }, include: { person: true } })
+  if (isAdmin(me)) notifyAll(me, c.person, day, body) // not awaited: the comment shouldn't wait on mail
   done()
+}
+
+// Admin comment → short email to the whole team, admin included.
+async function notifyAll(me, about, day, body) {
+  if (!process.env.RESEND_API_KEY) return
+  const people = await prisma.person.findMany({ where: { active: true, email: { not: '' } } })
+  const url = `${process.env.APP_URL || 'http://localhost:3000'}/?d=${day}#p-${about.id}`
+  const subject = `${me.name} commented on ${about.id === me.id ? 'their own' : `${about.name}'s`} update (${fmtDay(day, { day: 'numeric', month: 'short' })})`
+  // ponytail: one send per person, sequential. Switch to Resend's batch endpoint if the team grows large.
+  for (const p of people) {
+    await send({
+      to: p.email,
+      subject,
+      text: `Hi ${p.name},\n\n${me.name} left a comment on ${about.name}'s update for ${fmtDay(day)}:\n\n  "${body}"\n\nView it and reply: ${url}\n\nTrackMe\n`,
+    }).catch((err) => console.error(`[trackme] comment email to ${p.email} failed:`, err.message))
+  }
 }
 
 export async function savePerson(formData) {

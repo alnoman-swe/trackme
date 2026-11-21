@@ -3,7 +3,7 @@ import { prisma, toDate, toDay } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isWorkDay, nowParts } from '../lib/logic.js'
 import { addComment, signOut } from './actions.js'
-import { Refresher } from './ui.js'
+import { Refresher, Unread } from './ui.js'
 
 const ICONS = {
   columns: 'M3 3h18v18H3zM9 3v18M15 3v18',
@@ -95,8 +95,7 @@ export default async function Shell({ active, day, error, children }) {
                 className={`dot ${mine.has(d) ? 'on' : isWorkDay(d, cfg.workDays) ? 'off' : ''}`}
                 title={mine.has(d) ? 'You wrote' : 'You did not write'}
               />
-              {d === today ? 'Today' : fmtDay(d, { weekday: 'short', day: 'numeric', month: 'short' })}
-            </Link>
+              {d === today ? 'Today' : fmtDay(d, { weekday: 'short', day: 'numeric', month: 'short' })}            </Link>
           ))}
         </div>
         <form className="me" action={signOut}>
@@ -111,12 +110,15 @@ export default async function Shell({ active, day, error, children }) {
 }
 
 // Comments on one person's day, plus the box to add one. Used by the board and the doc.
-export function Thread({ person, day, isMe, comments, when }) {
+export function Thread({ person, day, isMe, meId, comments, when }) {
   const mine = comments.filter((c) => c.person_id === person.id)
-  // Collapsed behind a chat icon + count; <details> keeps itself open across the 5s refresh.
+  const fromOthers = mine.filter((c) => c.author_id !== meId).map((c) => c.id)
+  // Collapsed behind a chat icon + count; a red badge shows comments you haven't opened yet.
   return (
     <details className="thread">
-      <summary aria-label={`${mine.length} comment${mine.length === 1 ? "" : "s"} on ${person.name}'s day`}><Icon name="chat" />{mine.length || ''}</summary>
+      <summary aria-label={`${mine.length} comment${mine.length === 1 ? "" : "s"} on ${person.name}'s day`}>
+        <Icon name="chat" />{mine.length || ''}<Unread thread={`${person.id}:${day}`} ids={fromOthers} />
+      </summary>
       {mine.map((c) => (
         <p key={c.id}><b>{c.author.name}</b> {c.body} <time>{when(c.created_at)}</time></p>
       ))}

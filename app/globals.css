@@ -101,6 +101,7 @@ button.primary:hover, a.primary:hover { background: #148567; }
 .side a[aria-current] .tile { background: #fff; }
 .side .days a { padding: 4px 12px; font-weight: 400; }
 .side .days a[aria-current] { font-weight: 700; }
+.badge { min-width: 20px; padding: 0 6px; border-radius: 99px; background: #e01e5a; color: #fff; font-size: 12px; font-weight: 700; text-align: center; line-height: 20px; }
 .side h2 { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); padding: 18px 6px 4px; }
 .side .me { margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 10px 8px; font-weight: 700; background: var(--raised); border-radius: 12px; }
 .side .me span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -152,7 +153,8 @@ time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; col
 .thread form { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .thread input { flex: 1; padding: 3px 10px; color: var(--ink); }
 .thread button { padding: 4px 8px; color: var(--ink); }
-.thread form:not(:focus-within) button { visibility: hidden; }
+/* Hide send only while empty: Safari doesn't focus buttons on click, so hiding on blur swallowed the click */
+.thread form:not(:focus-within):has(input:placeholder-shown) button { visibility: hidden; }
 .thread summary { display: inline-flex; align-items: center; gap: 4px; width: fit-content; cursor: pointer; color: var(--muted); font-weight: 700; list-style: none; }
 .thread summary::-webkit-details-marker { display: none; }
 .thread[open] summary { color: var(--ink); }

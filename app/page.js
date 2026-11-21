@@ -79,7 +79,7 @@ export default async function Board({ searchParams }) {
                     ) : (
                       <p className="missing"><Icon name="clock" />Not written yet</p>
                     )}
-                    <Thread person={p} day={day} isMe={isMe} comments={comments} when={savedAt} />
+                    <Thread person={p} day={day} isMe={isMe} meId={me?.id} comments={comments} when={savedAt} />
                   </div>
                 </article>
               )

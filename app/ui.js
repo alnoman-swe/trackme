@@ -67,6 +67,29 @@ export function Refresher() {
   return null
 }
 
+// Red count of comments (by others) newer than the last one you opened in this thread, Messenger-style.
+// Opening the <details> marks them read. Remembered per browser in localStorage, no database.
+export function Unread({ thread, ids }) {
+  const ref = useRef()
+  const [n, setN] = useState(0)
+  const key = `seen:${thread}`
+  const idList = ids.join()
+  useEffect(() => {
+    const box = ref.current.closest('details')
+    const seen = () => { try { return Number(localStorage.getItem(key)) || 0 } catch { return 0 } }
+    const update = () => {
+      if (box.open) {
+        try { localStorage.setItem(key, String(Math.max(seen(), 0, ...ids))) } catch {}
+        setN(0)
+      } else setN(ids.filter((id) => id > seen()).length)
+    }
+    update()
+    box.addEventListener('toggle', update)
+    return () => box.removeEventListener('toggle', update)
+  }, [key, idList]) // eslint-disable-line react-hooks/exhaustive-deps
+  return <span ref={ref} className="badge" hidden={!n} aria-label={`${n} new`}>{n}</span>
+}
+
 // Submit button that asks first. For destructive actions.
 export function ConfirmButton({ message, ...props }) {
   return <button {...props} onClick={(e) => { if (!confirm(message)) e.preventDefault() }} />
