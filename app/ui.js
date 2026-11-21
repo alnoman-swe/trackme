@@ -85,10 +85,21 @@ export function Refresher() {
   return null
 }
 
-// Chat icon + count. Unread comments (by others, newer than the last time you opened this thread)
-// turn the bubble red and show how many are new; otherwise it shows the total.
+// Soft oval speech bubble with a code glyph. Colours come from CSS (grey when empty, blue when commented).
+const Bubble = () => (
+  <svg className="bubble" viewBox="0 0 32 32" aria-hidden="true">
+    <g className="b">
+      <ellipse cx="16" cy="15.6" rx="12" ry="10.4" />
+      <path d="M6.9 21.6c-.2 2-1.2 3.7-2.6 5-.4.4-.1 1 .4 1 2.7.1 5.2-.6 7.2-2.3z" />
+    </g>
+    <path className="c" d="M13.7 12.8l-2.8 2.8 2.8 2.8M18.3 12.8l2.8 2.8-2.8 2.8" />
+  </svg>
+)
+
+// Bubble on every thread, plus the comment count when there is one.
+// It wiggles once there is a comment, and turns deep blue while some by others are unopened.
 // Opening the <details> marks them read. Remembered per browser in localStorage, no database.
-export function Unread({ thread, ids, total, children }) {
+export function Unread({ thread, ids, total }) {
   const ref = useRef()
   const [n, setN] = useState(0)
   const key = `seen:${thread}`
@@ -107,8 +118,8 @@ export function Unread({ thread, ids, total, children }) {
     return () => box.removeEventListener('toggle', update)
   }, [key, idList]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <span ref={ref} className={`count-chat${n ? ' unread' : ''}`} title={n ? `${n} new comment${n === 1 ? '' : 's'}` : undefined}>
-      {children}{n || total || ''}
+    <span ref={ref} className={`count-chat${total ? ' has' : ''}${n ? ' unread' : ''}`} title={n ? `${n} new comment${n === 1 ? '' : 's'}` : undefined}>
+      <Bubble />{total || ''}
     </span>
   )
 }

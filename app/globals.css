@@ -101,10 +101,18 @@ button.primary:hover, a.primary:hover { background: #148567; }
 .side a[aria-current] .tile { background: #fff; }
 .side .days a { padding: 4px 12px; font-weight: 400; }
 .side .days a[aria-current] { font-weight: 700; }
-.count-chat { display: inline-flex; align-items: center; gap: 5px; }
-/* New comments: bubble fills red, like a notification */
-.count-chat.unread { color: var(--ink); }
-.count-chat.unread .icon { fill: #f04e58; width: 1.4em; height: 1.4em; }
+.count-chat { --bf: #d3d9e6; --bc: #5d6880; display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 14px; font-weight: 700; }
+/* Comment bubble: grey when empty, blue + wiggling once commented, deep blue while there are new ones */
+.count-chat.has { --bf: #b1c5f6; --bc: #3a6ce8; color: #3a6ce8; }
+.count-chat.unread { --bf: #3a6ce8; --bc: #fff; }
+.count-chat .bubble { width: 24px; height: 24px; flex: none; overflow: visible; transform-origin: 30% 85%; transition: transform .2s ease; }
+.count-chat .bubble .b { fill: var(--bf); transition: fill .25s ease; }
+.count-chat .bubble .c { fill: none; stroke: var(--bc); stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; transition: stroke .25s ease; }
+.thread summary:hover .bubble { transform: translateY(-2px) scale(1.08); }
+.count-chat.has .bubble { animation: wiggle 2.4s ease-in-out infinite; }
+.count-chat.unread .bubble { filter: drop-shadow(0 2px 4px #3a6ce866); }
+@keyframes wiggle { 0%, 60%, 100% { transform: rotate(0) scale(1); } 68% { transform: rotate(-12deg) scale(1.12); } 76% { transform: rotate(10deg) scale(1.12); } 84% { transform: rotate(-6deg) scale(1.06); } 92% { transform: rotate(3deg); } }
+@media (prefers-reduced-motion: reduce) { .count-chat .bubble { animation: none !important; transition: none; } }
 .side h2 { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); padding: 18px 6px 4px; }
 .side .me { margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 10px 8px; font-weight: 700; background: var(--raised); border-radius: 12px; }
 .side .me span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
