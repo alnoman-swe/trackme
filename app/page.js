@@ -3,7 +3,7 @@ import { prisma, toDate } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../lib/logic.js'
 import Shell, { Avatar, Icon, Thread, Tile } from './shell.js'
-import { EmailAll, EntryEditor } from './ui.js'
+import { EntryEditor } from './ui.js'
 
 const HEADINGS = { Dev: 'Developers', QA: 'QA', Manager: 'Managers', Leader: 'Leaders', Admin: 'Admins' }
 
@@ -45,7 +45,6 @@ export default async function Board({ searchParams }) {
           {day < today && <Link href={`/?d=${addDays(day, 1)}`} aria-label="Next day"><Icon name="right" /></Link>}
         </div>
       </header>
-      {isAdmin(me) && <EmailAll />}
 
       <div className="roster" aria-label="Who has written">
         {people.map((p) => (
@@ -74,7 +73,7 @@ export default async function Board({ searchParams }) {
                       {entry && <time><Icon name="clock" />{savedAt(entry.updated_at)}</time>}
                     </div>
                     {isMe ? (
-                      <EntryEditor key={day} day={day} initial={entry?.body ?? ''} />
+                      <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
                     ) : entry ? (
                       <p className="body">{entry.body}</p>
                     ) : (

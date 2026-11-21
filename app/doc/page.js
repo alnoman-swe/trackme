@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma, toDate } from '../../lib/db.js'
 import { getMe } from '../../lib/me.js'
-import { addDays, config, fmtDay, isDay, nowParts } from '../../lib/logic.js'
+import { addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../../lib/logic.js'
 import Shell, { Avatar, Icon, Thread } from '../shell.js'
 import { EntryEditor } from '../ui.js'
 
@@ -51,7 +51,7 @@ export default async function Doc({ searchParams }) {
                 {entry && <time><Icon name="clock" />{time(entry.updated_at)}</time>}
               </div>
               {isMe ? (
-                <EntryEditor key={day} day={day} initial={entry?.body ?? ''} />
+                <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
               ) : entry ? (
                 <p className="body">{entry.body}</p>
               ) : (
