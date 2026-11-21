@@ -57,12 +57,12 @@ async function emailTeam(subject, message) {
   return { sent, of: people.length }
 }
 
-// Admin-only: email a message to everyone on the team (admins included). Nothing is saved.
-// Used with useActionState, so it returns a status line instead of throwing.
-export async function emailEveryone(_prev, formData) {
+// Admin-only: email the admin's text to everyone on the team (admins included).
+// Returns a status line for the button instead of throwing.
+export async function emailEveryone(text) {
   const me = await getMe()
   if (!isAdmin(me)) return 'Only admins can email everyone'
-  const body = String(formData.get('body') ?? '').trim().slice(0, 5000)
+  const body = String(text ?? '').trim().slice(0, 5000)
   if (!body) return 'Write a message first'
   if (!process.env.RESEND_API_KEY) return 'Email is off: RESEND_API_KEY is not set'
   const { sent, of } = await emailTeam(`Message from ${me.name}`, `${body}\n\n${me.name}`)

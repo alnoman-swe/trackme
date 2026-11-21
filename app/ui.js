@@ -1,13 +1,21 @@
 'use client'
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { emailEveryone, saveEntry } from './actions.js'
 import { continueList } from '../lib/logic.js'
 
 // Your own box for the day. Saves by itself shortly after you stop typing.
-export function EntryEditor({ day, initial }) {
+// Admins (canEmail) also get a button that emails the text to the whole team.
+export function EntryEditor({ day, initial, canEmail }) {
   const [value, setValue] = useState(initial)
   const [status, setStatus] = useState(initial ? 'Saved' : '')
+  const [mail, setMail] = useState('')
+
+  async function emailAll() {
+    if (!confirm('Email this to everyone on the team?')) return
+    setMail('Sending…')
+    setMail(await emailEveryone(latest.current).catch(() => 'Not sent. Check your connection.'))
+  }
   const timer = useRef()
   const latest = useRef(initial)
 
@@ -52,7 +60,17 @@ export function EntryEditor({ day, initial }) {
           if (value === '1. ') setValue((latest.current = '')) // untouched starter goes away
         }}
       />
-      <small role="status">{status}</small>
+      <div className="editor-foot">
+        <small role="status">{status}</small>
+        {canEmail && (
+          <>
+            <button type="button" className="primary" onClick={emailAll} disabled={mail === 'Sending…' || !value.replace(/^\s*\d+\.\s*$/gm, '').trim()}>
+              Email to everyone
+            </button>
+            <small role="status">{mail}</small>
+          </>
+        )}
+      </div>
     </div>
   )
 }
@@ -67,9 +85,10 @@ export function Refresher() {
   return null
 }
 
-// Red count of comments (by others) newer than the last one you opened in this thread, Messenger-style.
+// Chat icon + count. Unread comments (by others, newer than the last time you opened this thread)
+// turn the bubble red and show how many are new; otherwise it shows the total.
 // Opening the <details> marks them read. Remembered per browser in localStorage, no database.
-export function Unread({ thread, ids }) {
+export function Unread({ thread, ids, total, children }) {
   const ref = useRef()
   const [n, setN] = useState(0)
   const key = `seen:${thread}`
@@ -87,23 +106,10 @@ export function Unread({ thread, ids }) {
     box.addEventListener('toggle', update)
     return () => box.removeEventListener('toggle', update)
   }, [key, idList]) // eslint-disable-line react-hooks/exhaustive-deps
-  return <span ref={ref} className="badge" hidden={!n} aria-label={`${n} new`}>{n}</span>
-}
-
-// Admin box: type a message, it goes out by email to the whole team. Not saved.
-export function EmailAll() {
-  const [status, action, pending] = useActionState(emailEveryone, '')
   return (
-    <details className="mailall">
-      <summary>Email everyone</summary>
-      <form action={action} onSubmit={(e) => { if (!confirm('Send this email to everyone on the team?')) e.preventDefault() }}>
-        <textarea name="body" rows={4} required maxLength={5000} placeholder="Message to the whole team" aria-label="Message to everyone" />
-        <div>
-          <button className="primary" disabled={pending}>{pending ? 'Sending…' : 'Send to everyone'}</button>
-          <small role="status">{status}</small>
-        </div>
-      </form>
-    </details>
+    <span ref={ref} className={`count-chat${n ? ' unread' : ''}`} title={n ? `${n} new comment${n === 1 ? '' : 's'}` : undefined}>
+      {children}{n || total || ''}
+    </span>
   )
 }
 
