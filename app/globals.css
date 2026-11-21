@@ -72,15 +72,16 @@ button.primary:hover, a.primary:hover { background: #148567; }
   border: 2px solid var(--edge); background: var(--role); color: var(--on-color); font-weight: 800; font-size: 17px;
 }
 
-/* 3D avatar: glossy round bubble, character peeks up out of it and bounces on hover */
+/* 3D avatar: glossy bubble with a white + role-colour ring; character bounces on hover */
 .avatar {
-  overflow: hidden; border-radius: 50% !important; border-color: rgb(255 255 255 / .7);
-  box-shadow: inset 0 -4px 8px rgb(0 0 0 / .12), inset 0 4px 6px rgb(255 255 255 / .5), 0 2px 6px rgb(0 0 0 / .18);
+  overflow: hidden; border-radius: 50% !important; border: 0;
+  background-image: radial-gradient(circle at 32% 22%, rgb(255 255 255 / .75), rgb(255 255 255 / 0) 55%), linear-gradient(to bottom, rgb(255 255 255 / 0) 55%, rgb(0 0 0 / .12));
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--role), 0 4px 10px rgb(0 0 0 / .18);
   transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
 }
-.avatar img { width: 100%; height: 100%; display: block; transform: translateY(8%) scale(1.08); transition: transform .3s cubic-bezier(.34, 1.56, .64, 1); }
-:is(a, li, tr, label, .me):hover > .avatar, .avatar:hover { transform: scale(1.12) rotate(-6deg); }
-:is(a, li, tr, label, .me):hover > .avatar img, .avatar:hover img { transform: translateY(2%) scale(1.15); }
+.avatar img { width: 100%; height: 100%; display: block; object-fit: cover; filter: drop-shadow(0 2px 2px rgb(0 0 0 / .25)); transition: transform .3s cubic-bezier(.34, 1.56, .64, 1); }
+:is(a, li, tr, label, .me):hover > .avatar, .avatar:hover { transform: scale(1.1) rotate(-5deg); }
+:is(a, li, tr, label, .me):hover > .avatar img, .avatar:hover img { transform: scale(1.08) translateY(-3%); }
 .roster a.out .avatar img { filter: grayscale(1); opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .avatar, .avatar img { transition: none; } }
 
