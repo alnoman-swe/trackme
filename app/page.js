@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { prisma, toDate } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
-import { ROLES, addDays, config, fmtDay, isDay, nowParts } from '../lib/logic.js'
+import { ROLES, addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../lib/logic.js'
 import Shell, { Avatar, Icon, Thread, Tile } from './shell.js'
-import { EntryEditor } from './ui.js'
+import { EmailAll, EntryEditor } from './ui.js'
 
 const HEADINGS = { Dev: 'Developers', QA: 'QA', Manager: 'Managers', Leader: 'Leaders', Admin: 'Admins' }
 
@@ -45,6 +45,7 @@ export default async function Board({ searchParams }) {
           {day < today && <Link href={`/?d=${addDays(day, 1)}`} aria-label="Next day"><Icon name="right" /></Link>}
         </div>
       </header>
+      {isAdmin(me) && <EmailAll />}
 
       <div className="roster" aria-label="Who has written">
         {people.map((p) => (
@@ -79,7 +80,7 @@ export default async function Board({ searchParams }) {
                     ) : (
                       <p className="missing"><Icon name="clock" />Not written yet</p>
                     )}
-                    <Thread person={p} day={day} isMe={isMe} comments={comments} when={savedAt} />
+                    <Thread person={p} day={day} isMe={isMe} meId={me?.id} comments={comments} when={savedAt} />
                   </div>
                 </article>
               )

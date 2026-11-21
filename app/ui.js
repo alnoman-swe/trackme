@@ -1,7 +1,7 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { saveEntry } from './actions.js'
+import { emailEveryone, saveEntry } from './actions.js'
 import { continueList } from '../lib/logic.js'
 
 // Your own box for the day. Saves by itself shortly after you stop typing.
@@ -65,6 +65,46 @@ export function Refresher() {
     return () => clearInterval(id)
   }, [router])
   return null
+}
+
+// Red count of comments (by others) newer than the last one you opened in this thread, Messenger-style.
+// Opening the <details> marks them read. Remembered per browser in localStorage, no database.
+export function Unread({ thread, ids }) {
+  const ref = useRef()
+  const [n, setN] = useState(0)
+  const key = `seen:${thread}`
+  const idList = ids.join()
+  useEffect(() => {
+    const box = ref.current.closest('details')
+    const seen = () => { try { return Number(localStorage.getItem(key)) || 0 } catch { return 0 } }
+    const update = () => {
+      if (box.open) {
+        try { localStorage.setItem(key, String(Math.max(seen(), 0, ...ids))) } catch {}
+        setN(0)
+      } else setN(ids.filter((id) => id > seen()).length)
+    }
+    update()
+    box.addEventListener('toggle', update)
+    return () => box.removeEventListener('toggle', update)
+  }, [key, idList]) // eslint-disable-line react-hooks/exhaustive-deps
+  return <span ref={ref} className="badge" hidden={!n} aria-label={`${n} new`}>{n}</span>
+}
+
+// Admin box: type a message, it goes out by email to the whole team. Not saved.
+export function EmailAll() {
+  const [status, action, pending] = useActionState(emailEveryone, '')
+  return (
+    <details className="mailall">
+      <summary>Email everyone</summary>
+      <form action={action} onSubmit={(e) => { if (!confirm('Send this email to everyone on the team?')) e.preventDefault() }}>
+        <textarea name="body" rows={4} required maxLength={5000} placeholder="Message to the whole team" aria-label="Message to everyone" />
+        <div>
+          <button className="primary" disabled={pending}>{pending ? 'Sending…' : 'Send to everyone'}</button>
+          <small role="status">{status}</small>
+        </div>
+      </form>
+    </details>
+  )
 }
 
 // Submit button that asks first. For destructive actions.
