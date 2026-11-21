@@ -31,24 +31,42 @@ export async function addComment(personId, day, formData) {
   if (!me) throw new Error('Sign in first')
   if (!isDay(day) || !body) return
   const c = await prisma.comment.create({ data: { person_id: Number(personId), day: toDate(day), author_id: me.id, body }, include: { person: true } })
-  if (isAdmin(me)) notifyAll(me, c.person, day, body) // not awaited: the comment shouldn't wait on mail
+  if (isAdmin(me)) {
+    // Not awaited: the comment shouldn't wait on mail.
+    const about = c.person.id === me.id ? 'their own' : `${c.person.name}'s`
+    emailTeam(
+      `${me.name} commented on ${about} update (${fmtDay(day, { day: 'numeric', month: 'short' })})`,
+      `${me.name} left a comment on ${c.person.name}'s update for ${fmtDay(day)}:\n\n  "${body}"\n\nView it and reply: ${APP_URL()}/?d=${day}#p-${c.person.id}`,
+    )
+  }
   done()
 }
 
-// Admin comment → short email to the whole team, admin included.
-async function notifyAll(me, about, day, body) {
-  if (!process.env.RESEND_API_KEY) return
+const APP_URL = () => process.env.APP_URL || 'http://localhost:3000'
+
+// Plain-text email to everyone on the team who has an address (admins included). Returns { sent, of }.
+async function emailTeam(subject, message) {
+  if (!process.env.RESEND_API_KEY) return { sent: 0, of: 0 }
   const people = await prisma.person.findMany({ where: { active: true, email: { not: '' } } })
-  const url = `${process.env.APP_URL || 'http://localhost:3000'}/?d=${day}#p-${about.id}`
-  const subject = `${me.name} commented on ${about.id === me.id ? 'their own' : `${about.name}'s`} update (${fmtDay(day, { day: 'numeric', month: 'short' })})`
+  let sent = 0
   // ponytail: one send per person, sequential. Switch to Resend's batch endpoint if the team grows large.
   for (const p of people) {
-    await send({
-      to: p.email,
-      subject,
-      text: `Hi ${p.name},\n\n${me.name} left a comment on ${about.name}'s update for ${fmtDay(day)}:\n\n  "${body}"\n\nView it and reply: ${url}\n\nTrackMe\n`,
-    }).catch((err) => console.error(`[trackme] comment email to ${p.email} failed:`, err.message))
+    await send({ to: p.email, subject, text: `Hi ${p.name},\n\n${message}\n\nTrackMe · ${APP_URL()}\n` })
+      .then(() => sent++, (err) => console.error(`[trackme] team email to ${p.email} failed:`, err.message))
   }
+  return { sent, of: people.length }
+}
+
+// Admin-only: email a message to everyone on the team (admins included). Nothing is saved.
+// Used with useActionState, so it returns a status line instead of throwing.
+export async function emailEveryone(_prev, formData) {
+  const me = await getMe()
+  if (!isAdmin(me)) return 'Only admins can email everyone'
+  const body = String(formData.get('body') ?? '').trim().slice(0, 5000)
+  if (!body) return 'Write a message first'
+  if (!process.env.RESEND_API_KEY) return 'Email is off: RESEND_API_KEY is not set'
+  const { sent, of } = await emailTeam(`Message from ${me.name}`, `${body}\n\n${me.name}`)
+  return sent === of ? `Sent to all ${sent}` : `Sent to ${sent} of ${of}. Check the server log for the failures.`
 }
 
 export async function savePerson(formData) {
