@@ -113,11 +113,11 @@ export default async function Shell({ active, day, error, children }) {
 export function Thread({ person, day, isMe, meId, comments, when }) {
   const mine = comments.filter((c) => c.person_id === person.id)
   const fromOthers = mine.filter((c) => c.author_id !== meId).map((c) => c.id)
-  // Collapsed behind a chat icon + count; the bubble turns red for comments you haven't opened yet.
+  // Collapsed behind a chat icon + count; it pulses while there are comments you haven't opened.
   return (
     <details className="thread">
       <summary aria-label={`${mine.length} comment${mine.length === 1 ? "" : "s"} on ${person.name}'s day`}>
-        <Unread thread={`${person.id}:${day}`} ids={fromOthers} total={mine.length}><Icon name="chat" /></Unread>
+        <Unread thread={`${person.id}:${day}`} ids={fromOthers} total={mine.length} />
       </summary>
       {mine.map((c) => (
         <p key={c.id}><b>{c.author.name}</b> {c.body} <time>{when(c.created_at)}</time></p>
