@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../lib/logic.js'
+import { Md } from './md.js'
 import Shell, { Avatar, Icon, Thread, Tile } from './shell.js'
 import { EntryEditor } from './ui.js'
 
@@ -17,7 +18,7 @@ export default async function Board({ searchParams }) {
   const [people, entries, comments] = await Promise.all([
     prisma.person.findMany({ where: { active: true }, orderBy: { name: 'asc' } }),
     prisma.entry.findMany({ where: { day: toDate(day) } }),
-    prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true }, orderBy: { id: 'asc' } }),
+    prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true, reactions: { include: { person: true } } }, orderBy: { id: 'asc' } }),
   ])
   const entryOf = Object.fromEntries(entries.map((e) => [e.person_id, e]))
   const wrote = people.filter((p) => entryOf[p.id]).length
@@ -75,7 +76,7 @@ export default async function Board({ searchParams }) {
                     {isMe ? (
                       <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
                     ) : entry ? (
-                      <p className="body">{entry.body}</p>
+                      <p className="body"><Md text={entry.body} /></p>
                     ) : (
                       <p className="missing"><Icon name="clock" />Not written yet</p>
                     )}

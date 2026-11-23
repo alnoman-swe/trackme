@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate } from '../../lib/db.js'
 import { getMe } from '../../lib/me.js'
 import { addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../../lib/logic.js'
+import { Md } from '../md.js'
 import Shell, { Avatar, Icon, Thread } from '../shell.js'
 import { EntryEditor } from '../ui.js'
 
@@ -16,7 +17,7 @@ export default async function Doc({ searchParams }) {
   const [people, entries, comments] = await Promise.all([
     prisma.person.findMany({ where: { active: true }, orderBy: [{ role: 'asc' }, { name: 'asc' }] }),
     prisma.entry.findMany({ where: { day: toDate(day) } }),
-    prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true }, orderBy: { id: 'asc' } }),
+    prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true, reactions: { include: { person: true } } }, orderBy: { id: 'asc' } }),
   ])
   people.sort((a, b) => (b.id === me?.id) - (a.id === me?.id)) // your column first
   const entryOf = Object.fromEntries(entries.map((e) => [e.person_id, e]))
@@ -53,7 +54,7 @@ export default async function Doc({ searchParams }) {
               {isMe ? (
                 <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
               ) : entry ? (
-                <p className="body">{entry.body}</p>
+                <p className="body"><Md text={entry.body} /></p>
               ) : (
                 <p className="missing"><Icon name="clock" />Not written yet</p>
               )}
