@@ -4,6 +4,8 @@ import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isWorkDay, nowParts } from '../lib/logic.js'
 import { addComment, signOut } from './actions.js'
 import { Refresher, Unread } from './ui.js'
+import { Md } from './md.js'
+import { Reactions } from './reactions.js'
 
 const ICONS = {
   columns: 'M3 3h18v18H3zM9 3v18M15 3v18',
@@ -120,7 +122,10 @@ export function Thread({ person, day, isMe, meId, comments, when }) {
         <Unread thread={`${person.id}:${day}`} ids={fromOthers} total={mine.length} />
       </summary>
       {mine.map((c) => (
-        <p key={c.id}><b>{c.author.name}</b> {c.body} <time>{when(c.created_at)}</time></p>
+        <div key={c.id} className="cmt">
+          <p><b>{c.author.name}</b> <Md text={c.body} /> <time>{when(c.created_at)}</time></p>
+          <Reactions commentId={c.id} meId={meId} list={c.reactions.map((r) => ({ e: r.emoji, p: r.person_id, n: r.person.name }))} />
+        </div>
       ))}
       <form action={addComment.bind(null, person.id, day)}>
         <input name="body" placeholder={isMe ? 'Reply' : `Comment on ${person.name}'s day`} aria-label={`Comment on ${person.name}'s day`} required maxLength={2000} autoComplete="off" />

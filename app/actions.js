@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { prisma, toDate } from '../lib/db.js'
 import { canEditPeople, getMe } from '../lib/me.js'
-import { ROLES, fmtDay, isAdmin, isDay } from '../lib/logic.js'
+import { REACTIONS, ROLES, fmtDay, isAdmin, isDay } from '../lib/logic.js'
 import { send } from '../lib/cron.js'
 
 const done = () => revalidatePath('/', 'layout')
@@ -39,6 +39,17 @@ export async function addComment(personId, day, formData) {
       `${me.name} left a comment on ${c.person.name}'s update for ${fmtDay(day)}:\n\n  "${body}"\n\nView it and reply: ${APP_URL()}/?d=${day}#p-${c.person.id}`,
     )
   }
+  done()
+}
+
+// Add your reaction, or remove it if you already gave that one.
+export async function toggleReaction(commentId, emoji) {
+  const me = await getMe()
+  if (!me) throw new Error('Sign in first')
+  if (!REACTIONS.includes(emoji)) throw new Error('Bad reaction')
+  const key = { comment_id: Number(commentId), person_id: me.id, emoji }
+  const { count } = await prisma.reaction.deleteMany({ where: key })
+  if (!count) await prisma.reaction.create({ data: key }).catch(() => {}) // double tap: already there
   done()
 }
 

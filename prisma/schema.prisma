@@ -23,9 +23,10 @@ model Person {
   is_admin Boolean @default(false)
   active   Boolean @default(true)
 
-  entries  Entry[]
-  comments Comment[] @relation("about")
-  authored Comment[] @relation("author")
+  entries   Entry[]
+  comments  Comment[]  @relation("about")
+  authored  Comment[]  @relation("author")
+  reactions Reaction[]
 
   @@map("people")
 }
@@ -52,11 +53,26 @@ model Comment {
   body       String
   created_at DateTime @default(now()) @db.Timestamptz
 
-  person Person @relation("about", fields: [person_id], references: [id])
-  author Person @relation("author", fields: [author_id], references: [id])
+  person    Person     @relation("about", fields: [person_id], references: [id])
+  author    Person     @relation("author", fields: [author_id], references: [id])
+  reactions Reaction[]
 
   @@index([day])
   @@map("comments")
+}
+
+// One emoji from one person on one comment. Tapping again removes it.
+model Reaction {
+  comment_id Int
+  person_id  Int
+  emoji      String
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  comment Comment @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  person  Person  @relation(fields: [person_id], references: [id], onDelete: Cascade)
+
+  @@id([comment_id, person_id, emoji])
+  @@map("reactions")
 }
 
 // One row per email batch per day, so nothing is sent twice

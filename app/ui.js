@@ -18,6 +18,46 @@ export function EntryEditor({ day, initial, canEmail }) {
   }
   const timer = useRef()
   const latest = useRef(initial)
+  const box = useRef()
+  const picker = useRef()
+
+  // Wrap the selection (or insert a placeholder) with Markdown marks, keeping it selected.
+  function wrap(before, after, hint) {
+    const t = box.current
+    const { selectionStart: a, selectionEnd: b, value: v } = t
+    const mid = v.slice(a, b) || hint
+    change(v.slice(0, a) + before + mid + after + v.slice(b))
+    requestAnimationFrame(() => { t.focus(); t.setSelectionRange(a + before.length, a + before.length + mid.length) })
+  }
+  function link() {
+    const url = prompt('Link address (https://…)')?.trim()
+    if (url && /^https?:\/\/\S+$/.test(url)) wrap('[', `](${url})`, 'link text')
+  }
+  function bullet() {
+    const t = box.current
+    const at = t.value.lastIndexOf('\n', t.selectionStart - 1) + 1
+    change(t.value.slice(0, at) + (/^\s*\d+\./.test(t.value.slice(at)) ? '' : '1. ') + t.value.slice(at))
+  }
+  async function upload(files) {
+    const list = [...files].filter((f) => f.type.startsWith('image/'))
+    if (!list.length) return
+    setStatus('Uploading image…')
+    for (const file of list) {
+      const body = new FormData()
+      body.set('file', file)
+      try {
+        const res = await fetch('/api/upload', { method: 'POST', body })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error)
+        const t = box.current, at = t.selectionEnd, v = t.value
+        const sep = at && v[at - 1] !== '\n' ? '\n' : ''
+        change(`${v.slice(0, at)}${sep}![${file.name.replace(/[\[\]]/g, '')}](${data.url})\n${v.slice(at)}`)
+      } catch (err) {
+        setStatus(`Image not added: ${err.message || 'check your connection'}`)
+        return
+      }
+    }
+  }
 
   async function save() {
     clearTimeout(timer.current)
@@ -39,14 +79,26 @@ export function EntryEditor({ day, initial, canEmail }) {
 
   return (
     <div className="editor">
+      <div className="toolbar" role="toolbar" aria-label="Formatting">
+        <button type="button" title="Bold (Ctrl/⌘ B)" aria-label="Bold" onClick={() => wrap('**', '**', 'bold')}><b>B</b></button>
+        <button type="button" title="Italic (Ctrl/⌘ I)" aria-label="Italic" onClick={() => wrap('*', '*', 'italic')}><i>I</i></button>
+        <button type="button" title="Add link" aria-label="Add link" onClick={link}>🔗</button>
+        <button type="button" title="Numbered list" aria-label="Numbered list" onClick={bullet}>1.</button>
+        <button type="button" title="Attach image (or paste / drop one)" aria-label="Attach image" onClick={() => picker.current.click()}>🖼️</button>
+        <input ref={picker} type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
+      </div>
       <textarea
+        ref={box}
         value={value}
         rows={4}
         aria-label="What you got done"
         placeholder="What did you get done today?"
         onFocus={() => value || setValue((latest.current = '1. '))}
         onChange={(e) => change(e.target.value)}
+        onPaste={(e) => { if (e.clipboardData.files.length) { e.preventDefault(); upload(e.clipboardData.files) } }}
+        onDrop={(e) => { if (e.dataTransfer.files.length) { e.preventDefault(); upload(e.dataTransfer.files) } }}
         onKeyDown={(e) => {
+          if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'i')) { e.preventDefault(); return e.key === 'b' ? wrap('**', '**', 'bold') : wrap('*', '*', 'italic') }
           const box = e.currentTarget
           if (e.key !== 'Enter' || e.shiftKey || box.selectionStart !== box.selectionEnd) return
           const next = continueList(box.value, box.selectionStart)
