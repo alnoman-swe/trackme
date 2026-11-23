@@ -53,6 +53,17 @@ export async function toggleReaction(commentId, emoji) {
   done()
 }
 
+// Same, on someone's entry for a day.
+export async function toggleEntryReaction(ownerId, day, emoji) {
+  const me = await getMe()
+  if (!me) throw new Error('Sign in first')
+  if (!REACTIONS.includes(emoji) || !isDay(day)) throw new Error('Bad reaction')
+  const key = { owner_id: Number(ownerId), day: toDate(day), person_id: me.id, emoji }
+  const { count } = await prisma.entryReaction.deleteMany({ where: key })
+  if (!count) await prisma.entryReaction.create({ data: key }).catch(() => {}) // double tap, or entry just deleted
+  done()
+}
+
 const APP_URL = () => process.env.APP_URL || 'http://localhost:3000'
 
 // Plain-text email to everyone on the team who has an address (admins included). Returns { sent, of }.
