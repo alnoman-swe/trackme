@@ -3,7 +3,7 @@ import { prisma, toDate } from '../../lib/db.js'
 import { getMe } from '../../lib/me.js'
 import { addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../../lib/logic.js'
 import { Md } from '../md.js'
-import Shell, { Avatar, Icon, Thread } from '../shell.js'
+import Shell, { Avatar, EntryReactions, Icon, Thread } from '../shell.js'
 import { EntryEditor } from '../ui.js'
 
 // Google-Docs-style: one column per person, side by side. Live via the Shell's Refresher.
@@ -16,7 +16,7 @@ export default async function Doc({ searchParams }) {
 
   const [people, entries, comments] = await Promise.all([
     prisma.person.findMany({ where: { active: true }, orderBy: [{ role: 'asc' }, { name: 'asc' }] }),
-    prisma.entry.findMany({ where: { day: toDate(day) } }),
+    prisma.entry.findMany({ where: { day: toDate(day) }, include: { reactions: { include: { person: true } } } }),
     prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true, reactions: { include: { person: true } } }, orderBy: { id: 'asc' } }),
   ])
   people.sort((a, b) => (b.id === me?.id) - (a.id === me?.id)) // your column first
@@ -54,7 +54,10 @@ export default async function Doc({ searchParams }) {
               {isMe ? (
                 <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
               ) : entry ? (
-                <p className="body"><Md text={entry.body} /></p>
+                <>
+                  <div className="body"><Md text={entry.body} /></div>
+                  <EntryReactions entry={entry} meId={me?.id} />
+                </>
               ) : (
                 <p className="missing"><Icon name="clock" />Not written yet</p>
               )}

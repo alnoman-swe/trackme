@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useOptimistic, useRef, useState, useTransition } from 'react'
-import { toggleReaction } from './actions.js'
 import { REACTIONS } from '../lib/logic.js'
 
 const NAMES = { like: 'Like', love: 'Love', haha: 'Haha', party: 'Celebrate', fire: 'Fire', eyes: 'Looking' }
@@ -13,8 +12,8 @@ const Emoji = ({ k, still, ...rest }) => (
 )
 
 // Reaction pills under a comment + a "+" that opens the picker. Taps update instantly (optimistic).
-// list: [{ e: emoji key, p: person id, n: person name }]
-export function Reactions({ commentId, meId, list }) {
+// toggle: bound server action taking the emoji key. list: [{ e: emoji key, p: person id, n: person name }]
+export function Reactions({ toggle, meId, list }) {
   const [shown, flip] = useOptimistic(list, (cur, e) =>
     cur.some((r) => r.e === e && r.p === meId) ? cur.filter((r) => !(r.e === e && r.p === meId)) : [...cur, { e, p: meId, n: 'You' }],
   )
@@ -38,7 +37,7 @@ export function Reactions({ commentId, meId, list }) {
     setOpen(false)
     start(async () => {
       flip(e)
-      await toggleReaction(commentId, e).catch(() => {}) // the next refresh shows the real state
+      await toggle(e).catch(() => {}) // the next refresh shows the real state
     })
   }
 

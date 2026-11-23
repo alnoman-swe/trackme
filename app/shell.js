@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate, toDay } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isWorkDay, nowParts } from '../lib/logic.js'
-import { addComment, signOut } from './actions.js'
+import { addComment, signOut, toggleEntryReaction, toggleReaction } from './actions.js'
 import { Refresher, Unread } from './ui.js'
 import { Md } from './md.js'
 import { Reactions } from './reactions.js'
@@ -111,6 +111,17 @@ export default async function Shell({ active, day, error, children }) {
   )
 }
 
+// Reactions on someone's written entry. Not on your own: react to others, not yourself.
+export function EntryReactions({ entry, meId }) {
+  return (
+    <Reactions
+      toggle={toggleEntryReaction.bind(null, entry.person_id, toDay(entry.day))}
+      meId={entry.person_id === meId ? null : meId}
+      list={entry.reactions.map((r) => ({ e: r.emoji, p: r.person_id, n: r.person.name }))}
+    />
+  )
+}
+
 // Comments on one person's day, plus the box to add one. Used by the board and the doc.
 export function Thread({ person, day, isMe, meId, comments, when }) {
   const mine = comments.filter((c) => c.person_id === person.id)
@@ -123,8 +134,8 @@ export function Thread({ person, day, isMe, meId, comments, when }) {
       </summary>
       {mine.map((c) => (
         <div key={c.id} className="cmt">
-          <p><b>{c.author.name}</b> <Md text={c.body} /> <time>{when(c.created_at)}</time></p>
-          <Reactions commentId={c.id} meId={meId} list={c.reactions.map((r) => ({ e: r.emoji, p: r.person_id, n: r.person.name }))} />
+          <div className="said"><b>{c.author.name}</b> <Md text={c.body} /> <time>{when(c.created_at)}</time></div>
+          <Reactions toggle={toggleReaction.bind(null, c.id)} meId={meId} list={c.reactions.map((r) => ({ e: r.emoji, p: r.person_id, n: r.person.name }))} />
         </div>
       ))}
       <form action={addComment.bind(null, person.id, day)}>

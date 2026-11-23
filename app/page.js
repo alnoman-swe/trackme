@@ -3,7 +3,7 @@ import { prisma, toDate } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isAdmin, isDay, nowParts } from '../lib/logic.js'
 import { Md } from './md.js'
-import Shell, { Avatar, Icon, Thread, Tile } from './shell.js'
+import Shell, { Avatar, EntryReactions, Icon, Thread, Tile } from './shell.js'
 import { EntryEditor } from './ui.js'
 
 const HEADINGS = { Dev: 'Developers', QA: 'QA', Manager: 'Managers', Leader: 'Leaders', Admin: 'Admins' }
@@ -17,7 +17,7 @@ export default async function Board({ searchParams }) {
 
   const [people, entries, comments] = await Promise.all([
     prisma.person.findMany({ where: { active: true }, orderBy: { name: 'asc' } }),
-    prisma.entry.findMany({ where: { day: toDate(day) } }),
+    prisma.entry.findMany({ where: { day: toDate(day) }, include: { reactions: { include: { person: true } } } }),
     prisma.comment.findMany({ where: { day: toDate(day) }, include: { author: true, reactions: { include: { person: true } } }, orderBy: { id: 'asc' } }),
   ])
   const entryOf = Object.fromEntries(entries.map((e) => [e.person_id, e]))
@@ -76,7 +76,10 @@ export default async function Board({ searchParams }) {
                     {isMe ? (
                       <EntryEditor key={day} day={day} initial={entry?.body ?? ''} canEmail={isAdmin(me)} />
                     ) : entry ? (
-                      <p className="body"><Md text={entry.body} /></p>
+                      <>
+                        <div className="body"><Md text={entry.body} /></div>
+                        <EntryReactions entry={entry} meId={me?.id} />
+                      </>
                     ) : (
                       <p className="missing"><Icon name="clock" />Not written yet</p>
                     )}
