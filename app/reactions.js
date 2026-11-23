@@ -4,7 +4,13 @@ import { toggleReaction } from './actions.js'
 import { REACTIONS } from '../lib/logic.js'
 
 const NAMES = { like: 'Like', love: 'Love', haha: 'Haha', party: 'Celebrate', fire: 'Fire', eyes: 'Looking' }
-const Emoji = ({ k, ...rest }) => <img src={`/emoji/${k}.png`} alt="" width="256" height="256" draggable="false" {...rest} />
+// Animated Noto emoji (WebP); static PNG for reduced motion and for the tiny burst particles.
+const Emoji = ({ k, still, ...rest }) => (
+  <picture>
+    {!still && <source srcSet={`/emoji/${k}.webp`} type="image/webp" media="(prefers-reduced-motion: no-preference)" />}
+    <img src={`/emoji/${k}.png`} alt="" width="128" height="128" draggable="false" {...rest} />
+  </picture>
+)
 
 // Reaction pills under a comment + a "+" that opens the picker. Taps update instantly (optimistic).
 // list: [{ e: emoji key, p: person id, n: person name }]
@@ -48,7 +54,7 @@ export function Reactions({ commentId, meId, list }) {
               <Emoji key={pop.e === e ? pop.n : 0} k={e} className={pop.e === e ? 'bounce' : ''} />
               {pop.e === e && (
                 <span className="burst" key={pop.n} aria-hidden="true">
-                  {[0, 1, 2, 3, 4, 5].map((i) => <i key={i} style={{ '--a': `${i * 60 - 90}deg`, '--d': `${i % 2 ? 30 : 40}px` }}><Emoji k={e} /></i>)}
+                  {[0, 1, 2, 3, 4, 5].map((i) => <i key={i} style={{ '--a': `${i * 60 - 90}deg`, '--d': `${i % 2 ? 30 : 40}px` }}><Emoji k={e} still /></i>)}
                 </span>
               )}
             </span>
