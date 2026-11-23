@@ -161,6 +161,9 @@ time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; col
 .editor small { color: var(--muted); min-height: 1.5em; display: block; }
 
 .thread { margin-top: 8px; padding-left: 12px; border-left: 3px solid var(--role); display: grid; gap: 4px; max-width: 70ch; }
+/* Inside <details> the comments sit in ::details-content, so the grid gap above doesn't reach them; space them here */
+.thread .cmt + .cmt { margin-top: 8px; }
+.thread .cmt + form { margin-top: 8px; } /* clears the reaction row and its hover lift */
 .thread p, .said { overflow-wrap: anywhere; }
 .thread form { display: flex; align-items: center; gap: 6px; color: var(--muted); }
 .thread input { flex: 1; padding: 3px 10px; color: var(--ink); }
@@ -237,6 +240,7 @@ time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; col
 /* One rhythm: 8px from the text above, 6px between every pill and the add button */
 .reacts { --spring: cubic-bezier(.34, 1.56, .64, 1); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; position: relative; margin-top: 8px; }
 .reacts:empty { display: none; }
+.cmt .reacts { margin-top: 3px; } /* comments are one line; sit the reactions snug under it */
 .reacts img { display: block; width: 100%; height: 100%; pointer-events: none; filter: drop-shadow(0 2px 2px #1d1c1d40); }
 /* Pills: frosted, hairline border, layered soft shadow; a light sheen sweeps across on hover. .reacts prefix beats .thread button. */
 .reacts .pill { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 6px; border-radius: 99px; cursor: pointer; overflow: hidden; isolation: isolate;
