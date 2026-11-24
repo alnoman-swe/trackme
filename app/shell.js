@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { prisma, toDate, toDay } from '../lib/db.js'
 import { getMe } from '../lib/me.js'
 import { ROLES, addDays, config, fmtDay, isWorkDay, nowParts } from '../lib/logic.js'
-import { addComment, signOut, toggleEntryReaction, toggleReaction } from './actions.js'
+import { addComment, deleteComment, editComment, signOut, toggleEntryReaction, toggleReaction } from './actions.js'
 import { Refresher, Unread } from './ui.js'
 import { Md } from './md.js'
 import { Reactions } from './reactions.js'
@@ -136,6 +136,17 @@ export function Thread({ person, day, isMe, meId, comments, when }) {
         <div key={c.id} className="cmt">
           <div className="said"><b>{c.author.name}</b> <Md text={c.body} /> <time>{when(c.created_at)}</time></div>
           <Reactions toggle={toggleReaction.bind(null, c.id)} meId={meId} list={c.reactions.map((r) => ({ e: r.emoji, p: r.person_id, n: r.person.name }))} />
+          {/* key on body: remounts (closes) the editor once the save lands */}
+          {c.author_id === meId && (
+            <details key={c.body} className="edit">
+              <summary>Edit</summary>
+              <form action={editComment.bind(null, c.id)}>
+                <input name="body" defaultValue={c.body} aria-label="Edit comment" required maxLength={2000} autoComplete="off" />
+                <button>Save</button>
+              </form>
+              <form action={deleteComment.bind(null, c.id)}><button>Delete</button></form>
+            </details>
+          )}
         </div>
       ))}
       <form action={addComment.bind(null, person.id, day)}>

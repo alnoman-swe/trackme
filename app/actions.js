@@ -42,6 +42,23 @@ export async function addComment(personId, day, formData) {
   done()
 }
 
+// Only the author can edit or delete their comment (the where clause enforces it). Reactions cascade on delete.
+export async function editComment(id, formData) {
+  const me = await getMe()
+  if (!me) throw new Error('Sign in first')
+  const body = String(formData.get('body') ?? '').trim().slice(0, 2000)
+  if (!body) return
+  await prisma.comment.updateMany({ where: { id: Number(id), author_id: me.id }, data: { body } })
+  done()
+}
+
+export async function deleteComment(id) {
+  const me = await getMe()
+  if (!me) throw new Error('Sign in first')
+  await prisma.comment.deleteMany({ where: { id: Number(id), author_id: me.id } })
+  done()
+}
+
 // Add your reaction, or remove it if you already gave that one.
 export async function toggleReaction(commentId, emoji) {
   const me = await getMe()

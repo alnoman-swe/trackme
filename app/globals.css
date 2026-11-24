@@ -172,9 +172,12 @@ time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; col
 .thread form:not(:focus-within):has(input:placeholder-shown) button { visibility: hidden; }
 .thread summary { display: inline-flex; align-items: center; gap: 4px; width: fit-content; cursor: pointer; color: var(--muted); font-weight: 700; list-style: none; }
 .thread summary::-webkit-details-marker { display: none; }
+.cmt .edit summary { font-size: .8em; font-weight: 400; }
+.cmt .edit form { margin-top: 4px; }
 .thread[open] summary { color: var(--ink); }
 /* Peek on hover; click (open) pins it */
-.thread:hover::details-content { content-visibility: visible; }
+/* Mouse only: on touch, hover sticks after a tap and the thread can't be closed */
+@media (hover: hover) { .thread:hover::details-content { content-visibility: visible; } }
 
 /* Who-wrote grid */
 .scroll { --role: var(--grape); overflow-x: auto; margin-top: 20px; padding: 10px 14px; }
@@ -217,16 +220,34 @@ time { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; col
 @media (max-width: 720px) {
   .shell { display: block; }
   .shell > main { padding: 18px 16px 60px; }
-  .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px; border-right: 0; border-bottom: 2px solid var(--line); }
-  .brand { padding: 0 8px 0 4px; }
+  /* Top bar: brand + me on row 1, the three views as a tab row, then the days strip */
+  .side { position: static; height: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; align-items: center; padding: 10px; border-right: 0; border-bottom: 2px solid var(--line); }
+  .brand { grid-column: 1 / 3; padding: 0 4px; }
+  .side > a { flex-direction: column; gap: 3px; font-size: 12px; padding: 6px 2px; text-align: center; white-space: nowrap; }
   .side h2 { display: none; }
-  .side .days { display: flex; gap: 4px; overflow-x: auto; width: 100%; order: 3; padding: 4px 4px 6px 0; }
+  .side .days { grid-column: 1 / -1; display: flex; gap: 4px; overflow-x: auto; padding: 2px 4px 6px 0; scrollbar-width: none; }
   .side .days a { white-space: nowrap; }
-  .side .me { margin: 0 0 0 auto; padding: 4px; }
+  .side .me { grid-column: 3; grid-row: 1; justify-self: end; margin: 0; padding: 4px; }
   .side .me span:nth-child(2) { display: none; }
+
+  .top h1 { font-size: 23px; }
+  .msg { gap: 10px; padding: 12px; }
+  .msg > .avatar { width: 32px; height: 32px; }
+  .group { margin-top: 24px; }
+  /* iOS zooms into any field under 16px */
+  input:not([type='checkbox']), select, textarea, .rich { font-size: 16px; }
+  .row input[name='name'] { flex: 1 1 140px; }
   .join { margin: 16px; padding: 20px; }
-  .cols { grid-auto-columns: 85%; }
+  .join h1 { font-size: 28px; }
+  .cols { grid-auto-columns: 88%; }
+  /* Picker anchors to the whole reaction row so it can't run off the right edge */
+  .add { position: static; }
+  .picker button { width: 34px; height: 34px; }
+  .lightbox figure img { max-height: 56vh; }
 }
+
+/* Grid: names stay put while the days scroll sideways */
+.grid tbody th { position: sticky; left: 0; z-index: 1; background: var(--card); }
 
 @media (prefers-reduced-motion: reduce) {
   button, .pager a { transition: none; }
